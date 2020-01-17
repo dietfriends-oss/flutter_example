@@ -3,7 +3,7 @@ name: iOS CI
 on:
   push:
     branches:
-      - master
+      - develop
 
 jobs:
   build:
@@ -11,7 +11,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v1
-
+      - uses: webfactory/ssh-agent@v0.1.1
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
       - uses: subosito/flutter-action@v1
         with:
           flutter-version: '1.12.13+hotfix.5'
@@ -32,8 +34,16 @@ jobs:
         run: |
           cd $FLUTTER_HOME
           flutter doctor
+      - name: set up code
+        run: |
+          git clone git@github.com:${GIT_OWNER}/${GIT_REPO}.git
+        env:
+          GIT_OWNER: ${{secrets.GIT_OWNER}}
+          GIT_REPO: ${{secrets.GIT_REPO}}
 
       - name: Build app
         run: |
-          flutter build ios --release --no-codesign --target lib/main.dart
+          ln -s $FLUTTER_HOME/.pub-cache $HOME/.pub-cache
+          flutter pub get
+          flutter build ios --no-pub --flavor development --release --no-codesign --target lib/main_dev.dart
         timeout-minutes: 60
