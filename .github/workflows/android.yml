@@ -1,0 +1,41 @@
+name: Android CI
+
+on:
+  push:
+    branches:
+      - master
+jobs:
+  build:
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions/cache@v1
+        with:
+          path: ~/.gradle/caches
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - uses: subosito/flutter-action@v1
+        with:
+          flutter-version: '1.12.13+hotfix.5'
+
+      - name: Set up Ruby 2.5
+        uses: actions/setup-ruby@v1
+        with:
+          ruby-version: 2.5.x
+
+      - name: Flutter Doctor
+        run: flutter doctor
+
+      - name: fix builder pub-cache path
+        run: |
+          flutter pub get
+          ln -s ${FLUTTER_HOME}/.pub-cache ~/.pub-cache
+
+      - name: Build APK
+        run: |
+          flutter apk
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+        timeout-minutes: 20
