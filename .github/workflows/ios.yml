@@ -37,7 +37,6 @@ jobs:
       - name: set up code
         run: |
           git clone git@github.com:${GIT_OWNER}/${GIT_REPO}.git
-          cd ${GIT_REPO}
         env:
           GIT_OWNER: ${{secrets.GIT_OWNER}}
           GIT_REPO: ${{secrets.GIT_REPO}}
@@ -45,6 +44,9 @@ jobs:
       - name: Build app
         run: |
           ln -s $FLUTTER_HOME/.pub-cache $HOME/.pub-cache
+          cd ${GIT_REPO}
           flutter pub get
           flutter build ios --no-pub --flavor development --release --no-codesign --target lib/main_dev.dart
         timeout-minutes: 60
+        env:
+          GIT_REPO: ${{secrets.GIT_REPO}}
