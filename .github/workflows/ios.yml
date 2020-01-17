@@ -1,0 +1,39 @@
+name: iOS CI
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v1
+
+      - uses: subosito/flutter-action@v1
+        with:
+          flutter-version: '1.12.13+hotfix.5'
+
+      - name: Set up Ruby 2.5
+        uses: actions/setup-ruby@v1
+        with:
+          ruby-version: 2.5.x
+
+      - name: Set up Xcode
+        run: |
+          xcversion select 11.2.1 --symlink
+          sudo xcode-select --switch /Applications/Xcode_11.2.1.app/Contents/Developer
+
+      - run: swift --version
+
+      - name: flutter doctor
+        run: |
+          cd $FLUTTER_HOME
+          flutter doctor
+
+      - name: Build app
+        run: |
+          flutter build ios --release --no-codesign --target lib/main.dart
+        timeout-minutes: 60
