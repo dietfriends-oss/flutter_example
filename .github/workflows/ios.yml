@@ -46,7 +46,7 @@ jobs:
           ln -s $FLUTTER_HOME/.pub-cache $HOME/.pub-cache
           cd ${GIT_REPO}
           flutter pub get
-          flutter build ios --no-pub --flavor development --release --no-codesign --target lib/main_dev.dart
+          flutter build ios --no-pub --flavor development --release --no-codesign --target lib/main_dev.dart > build.log
         timeout-minutes: 60
         env:
           GIT_REPO: ${{secrets.GIT_REPO}}
