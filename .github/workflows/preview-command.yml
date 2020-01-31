@@ -41,11 +41,10 @@ jobs:
         run: |
           ln -s $FLUTTER_HOME/.pub-cache $HOME/.pub-cache
           flutter pub get
-        #  flutter build ios --no-pub --flavor development --release --no-codesign --target lib/main_dev.dart > build.log
+          flutter build ios --no-pub --flavor development --release --no-codesign --target lib/main_dev.dart > build.log
         timeout-minutes: 60
 
       - name: deploy to Firebase
-        if: github.event_name =='push'
         run: |
           cd ios
           echo "=== install firebase.tools ==="
