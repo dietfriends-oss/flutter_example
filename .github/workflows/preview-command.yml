@@ -1,12 +1,12 @@
-name: iOS CI
+name: preview
 
 on:
   repository_dispatch:
     types: [preview-command]
 # https://github.com/peter-evans/slash-command-dispatch-processor/blob/master/.github/workflows/hello-world-pr-command.yml
 jobs:
-  helloWorld:
-    runs-on: ubuntu-latest
+  preview-ios:
+    runs-on: macos-latest
     steps:
       # Checkout the pull request branch
       - uses: actions/checkout@v2
@@ -14,6 +14,54 @@ jobs:
           token: ${{ secrets.ACTIONS_BOT_TOKEN }}
           repository: ${{ github.event.client_payload.pull_request.head.repo.full_name }}
           ref: ${{ github.event.client_payload.pull_request.head.ref }}
+
+      - uses: subosito/flutter-action@v1
+        with:
+          flutter-version: '1.12.13+hotfix.5'
+
+      - name: Set up Ruby 2.5
+        uses: actions/setup-ruby@v1
+        with:
+          ruby-version: 2.5.x
+
+      - name: Set up Xcode
+        run: |
+          xcversion select 11.2.1 --symlink
+          sudo xcode-select --switch /Applications/Xcode_11.2.1.app/Contents/Developer
+      - run: swift --version
+
+      - name: flutter doctor
+        run: |
+          cd $FLUTTER_HOME
+          flutter doctor
+
+      - name: Build app
+        run: |
+          ln -s $FLUTTER_HOME/.pub-cache $HOME/.pub-cache
+          flutter pub get
+        #  flutter build ios --no-pub --flavor development --release --no-codesign --target lib/main_dev.dart > build.log
+        timeout-minutes: 60
+
+      - name: deploy to Firebase
+        if: github.event_name =='push'
+        run: |
+          cd ios
+          echo "=== install firebase.tools ==="
+          curl -sL firebase.tools | bash
+          echo "=== install fastlane ==="
+          gem install fastlane -NV
+          echo "=== install bundler ==="
+          gem install bundler && bundle install --path vendor/bundle
+          echo "=== install fastlane plugins ==="
+          bundle exec fastlane install_plugins
+          bundle exec fastlane beta_dev service:GithubActions upload:true
+        env:
+          FASTLANE_USER: ${{ secrets.FASTLANE_USER }}
+          FASTLANE_PASSWORD: ${{ secrets.FASTLANE_PASSWORD }}
+          MATCH_USERNAME: ${{ secrets.MATCH_USERNAME }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+
       - name: Add reaction
         uses: peter-evans/create-or-update-comment@v1
         with:
