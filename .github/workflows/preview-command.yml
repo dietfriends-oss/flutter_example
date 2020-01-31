@@ -14,7 +14,9 @@ jobs:
           token: ${{ secrets.ACTIONS_BOT_TOKEN }}
           repository: ${{ github.event.client_payload.pull_request.head.repo.full_name }}
           ref: ${{ github.event.client_payload.pull_request.head.ref }}
-
+      - uses: webfactory/ssh-agent@v0.1.1
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
       - uses: subosito/flutter-action@v1
         with:
           flutter-version: '1.12.13+hotfix.5'
@@ -48,13 +50,11 @@ jobs:
           cd ios
           echo "=== install firebase.tools ==="
           curl -sL firebase.tools | bash
-          echo "=== install fastlane ==="
-          gem install fastlane -NV
           echo "=== install bundler ==="
           gem install bundler && bundle install --path vendor/bundle
           echo "=== install fastlane plugins ==="
-          bundle exec fastlane install_plugins
-          bundle exec fastlane beta_dev service:GithubActions upload:true
+          fastlane install_plugins
+          fastlane beta_dev service:GithubActions upload:true
         env:
           FASTLANE_USER: ${{ secrets.FASTLANE_USER }}
           FASTLANE_PASSWORD: ${{ secrets.FASTLANE_PASSWORD }}
