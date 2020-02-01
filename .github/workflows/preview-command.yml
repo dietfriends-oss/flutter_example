@@ -39,7 +39,7 @@ jobs:
           repository: ${{ github.event.client_payload.github.payload.repository.full_name }}
           comment-id: ${{ github.event.client_payload.github.payload.comment.id }}
           body: |
-            >preview ${{ github.event.client_payload.slash_command.args }}
+            >preview https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_ACTION}
           reaction-type: heart
       - uses: actions/checkout@v2
         with:
