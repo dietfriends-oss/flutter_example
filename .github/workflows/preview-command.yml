@@ -19,7 +19,7 @@ jobs:
           -e GITHUB_STATE=pending
           -e GITHUB_CONTEXT="Preview"
           -e GITHUB_DESCRIPTION="Commit status with target URL"
-          -e GITHUB_TARGET_URL="https://github.com/${GITHUB_REPOSITORY}/actions/${GITHUB_ACTION}"
+          -e GITHUB_TARGET_URL="https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_ACTION}"
           cloudposse/github-status-updater
         env:
           GITHUB_TOKEN: ${{ secrets.ACTIONS_BOT_TOKEN }}
@@ -115,7 +115,7 @@ jobs:
           -e GITHUB_STATE=success
           -e GITHUB_CONTEXT="Preview"
           -e GITHUB_DESCRIPTION="Commit status with target URL"
-          -e GITHUB_TARGET_URL="https://github.com/${GITHUB_REPOSITORY}/actions/${GITHUB_ACTION}"
+          -e GITHUB_TARGET_URL="https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_ACTION}"
           cloudposse/github-status-updater
         env:
           GITHUB_TOKEN: ${{ secrets.ACTIONS_BOT_TOKEN }}
@@ -137,7 +137,7 @@ jobs:
           -e GITHUB_STATE=failure
           -e GITHUB_CONTEXT="Preview"
           -e GITHUB_DESCRIPTION="Commit status with target URL"
-          -e GITHUB_TARGET_URL="https://github.com/${GITHUB_REPOSITORY}/actions/${GITHUB_ACTION}"
+          -e GITHUB_TARGET_URL="https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_ACTION}"
           cloudposse/github-status-updater
         env:
           GITHUB_TOKEN: ${{ secrets.ACTIONS_BOT_TOKEN }}
