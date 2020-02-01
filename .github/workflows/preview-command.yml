@@ -10,7 +10,7 @@ jobs:
     steps:
       - name: setup-updater
         run: |
-          curl -O https://github.com/cloudposse/github-status-updater/releases/download/0.2.0/github-status-updater_darwin_amd64
+          curl -LO https://github.com/cloudposse/github-status-updater/releases/download/0.2.0/github-status-updater_darwin_amd64
           chmod +x github-status-updater_darwin_amd64
           mv github-status-updater_darwin_amd64 $HOME/github-status-updater
       - name: pending
