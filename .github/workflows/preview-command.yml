@@ -9,6 +9,15 @@ jobs:
     runs-on: macos-latest
     steps:
       # Checkout the pull request branch
+      - name: Update comment
+        uses: peter-evans/create-or-update-comment@v1
+        with:
+          token: ${{ secrets.ACTIONS_BOT_TOKEN }}
+          repository: ${{ github.event.client_payload.github.payload.repository.full_name }}
+          comment-id: ${{ github.event.client_payload.github.payload.comment.id }}
+          body: |
+            >preview ${{ github.event.client_payload.slash_command.args }}
+          reaction-type: heart
       - uses: actions/checkout@v2
         with:
           token: ${{ secrets.ACTIONS_BOT_TOKEN }}
