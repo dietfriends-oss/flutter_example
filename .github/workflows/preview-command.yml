@@ -22,7 +22,7 @@ jobs:
             -repo ${{ github.event.client_payload.github.payload.repository.name }} \
             -ref ${{ github.event.client_payload.pull_request.head.sha }} \
             -state pending \
-            -context Preview \
+            -context "Preview (iOS)" \
             -description "Commit status with target URL" \
             -url "https://github.com/${GITHUB_REPOSITORY}/actions/runs"
 
@@ -107,7 +107,7 @@ jobs:
             -repo ${{ github.event.client_payload.github.payload.repository.name }} \
             -ref ${{ github.event.client_payload.pull_request.head.sha }} \
             -state success \
-            -context Preview \
+            -context "Preview (iOS)" \
             -description "Commit status with target URL" \
             -url "https://github.com/${GITHUB_REPOSITORY}/actions/runs"
 
@@ -122,7 +122,143 @@ jobs:
             -repo ${{ github.event.client_payload.github.payload.repository.name }} \
             -ref ${{ github.event.client_payload.pull_request.head.sha }} \
             -state failure \
-            -context Preview \
+            -context "Preview (iOS)" \
+            -description "Commit status with target URL" \
+            -url "https://github.com/${GITHUB_REPOSITORY}/actions/runs"
+
+      - name: Add reaction
+        if: failure()
+        uses: peter-evans/create-or-update-comment@v1
+        with:
+          token: ${{ secrets.ACTIONS_BOT_TOKEN }}
+          repository: ${{ github.event.client_payload.github.payload.repository.full_name }}
+          comment-id: ${{ github.event.client_payload.github.payload.comment.id }}
+          reaction-type: '-1'
+
+
+  preview-android:
+    runs-on: ubuntu-latest
+    steps:
+      - name: setup-updater
+        run: |
+          curl -LO https://github.com/cloudposse/github-status-updater/releases/download/0.2.0/github-status-updater_darwin_amd64
+          chmod +x github-status-updater_darwin_amd64
+          mv github-status-updater_darwin_amd64 $HOME/github-status-updater
+      - name: pending
+        run: |
+          $HOME/github-status-updater \
+            -token ${{ secrets.ACTIONS_BOT_TOKEN }} \
+            -action update_state \
+            -owner ${{ github.event.client_payload.github.payload.repository.owner.login }} \
+            -repo ${{ github.event.client_payload.github.payload.repository.name }} \
+            -ref ${{ github.event.client_payload.pull_request.head.sha }} \
+            -state pending \
+            -context "Preview (Android)" \
+            -description "Commit status with target URL" \
+            -url "https://github.com/${GITHUB_REPOSITORY}/actions/runs"
+
+      - name: Update comment
+        uses: peter-evans/create-or-update-comment@v1
+        with:
+          token: ${{ secrets.ACTIONS_BOT_TOKEN }}
+          repository: ${{ github.event.client_payload.github.payload.repository.full_name }}
+          comment-id: ${{ github.event.client_payload.github.payload.comment.id }}
+          body: |
+            >preview https://github.com/${GITHUB_REPOSITORY}/actions/runs
+          reaction-type: heart
+      - uses: actions/checkout@v2
+        with:
+          token: ${{ secrets.ACTIONS_BOT_TOKEN }}
+          repository: ${{ github.event.client_payload.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.client_payload.pull_request.head.ref }}
+      - uses: webfactory/ssh-agent@v0.1.1
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+      - uses: subosito/flutter-action@v1
+        with:
+          flutter-version: '1.12.13+hotfix.5'
+
+      - name: Set up Ruby 2.5
+        uses: actions/setup-ruby@v1
+        with:
+          ruby-version: 2.5.x
+
+      - name: flutter doctor
+        run: flutter doctor
+
+      - name: Install Fastlane
+        run: |
+          cd android
+          echo "=== install bundler ==="
+          gem install bundler && bundle install --path vendor/bundle
+          echo "=== install firebase ==="
+          echo "-- Downloading binary..."
+          sudo curl -o "/usr/local/bin/firebase"  -L --progress-bar https://firebase.tools/bin/linux/v7.10.0
+          echo "-- Setting permissions on binary..."
+          sudo chmod +rx "/usr/local/bin/firebase"
+          echo "=== install fastlane ==="
+          gem install fastlane -NV
+          echo "=== install fastlane plugins ==="
+          bundle exec fastlane install_plugins
+
+      - name: fix builder pub-cache path
+        run: |
+          flutter pub get
+          ln -s ${FLUTTER_HOME}/.pub-cache ~/.pub-cache
+
+      - name: Build APK
+        run: |
+          cd android
+          bundle exec fastlane betaBuild
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+        timeout-minutes: 20
+
+      - name: deploy Beta
+        if: github.event_name =='push'
+        run: |
+          echo "=== beta ==="
+          cd android
+          bundle exec fastlane beta_dev
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+        timeout-minutes: 5
+
+      - name: Add reaction
+        if: success()
+        uses: peter-evans/create-or-update-comment@v1
+        with:
+          token: ${{ secrets.ACTIONS_BOT_TOKEN }}
+          repository: ${{ github.event.client_payload.github.payload.repository.full_name }}
+          comment-id: ${{ github.event.client_payload.github.payload.comment.id }}
+          reaction-type: '+1'
+
+      - name: success
+        if: success()
+        run: |
+          $HOME/github-status-updater \
+            -token ${{ secrets.ACTIONS_BOT_TOKEN }} \
+            -action update_state \
+            -owner ${{ github.event.client_payload.github.payload.repository.owner.login }} \
+            -repo ${{ github.event.client_payload.github.payload.repository.name }} \
+            -ref ${{ github.event.client_payload.pull_request.head.sha }} \
+            -state success \
+            -context "Preview (Android)" \
+            -description "Commit status with target URL" \
+            -url "https://github.com/${GITHUB_REPOSITORY}/actions/runs"
+
+
+      - name: failure
+        if: failure()
+        run: |
+          $HOME/github-status-updater \
+            -token ${{ secrets.ACTIONS_BOT_TOKEN }} \
+            -action update_state \
+            -owner ${{ github.event.client_payload.github.payload.repository.owner.login }} \
+            -repo ${{ github.event.client_payload.github.payload.repository.name }} \
+            -ref ${{ github.event.client_payload.pull_request.head.sha }} \
+            -state failure \
+            -context "Preview (Android)" \
             -description "Commit status with target URL" \
             -url "https://github.com/${GITHUB_REPOSITORY}/actions/runs"
 
