@@ -16,7 +16,7 @@ jobs:
           -e GITHUB_OWNER=$PR_OWNER
           -e GITHUB_REPO=$PR_REPO
           -e GITHUB_REF=$PR_REF
-          -e GITHUB_STATE=success
+          -e GITHUB_STATE=pending
           -e GITHUB_CONTEXT="Preview"
           -e GITHUB_DESCRIPTION="Commit status with target URL"
           -e GITHUB_TARGET_URL="https://github.com/${GITHUB_REPOSITORY}/actions/${GITHUB_ACTION}"
@@ -100,3 +100,47 @@ jobs:
           repository: ${{ github.event.client_payload.github.payload.repository.full_name }}
           comment-id: ${{ github.event.client_payload.github.payload.comment.id }}
           reaction-type: hooray
+  success:
+    needs: [prepare, preview-ios]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Update State
+        run: >-
+          docker run -i
+          -e GITHUB_ACTION=update_state
+          -e GITHUB_TOKEN=$GITHUB_TOKEN
+          -e GITHUB_OWNER=$PR_OWNER
+          -e GITHUB_REPO=$PR_REPO
+          -e GITHUB_REF=$PR_REF
+          -e GITHUB_STATE=success
+          -e GITHUB_CONTEXT="Preview"
+          -e GITHUB_DESCRIPTION="Commit status with target URL"
+          -e GITHUB_TARGET_URL="https://github.com/${GITHUB_REPOSITORY}/actions/${GITHUB_ACTION}"
+          cloudposse/github-status-updater
+        env:
+          GITHUB_TOKEN: ${{ secrets.ACTIONS_BOT_TOKEN }}
+          PR_REPO: ${{ github.event.client_payload.github.payload.repository.name }}
+          PR_OWNER: ${{ github.event.client_payload.github.payload.repository.owner.login }}
+          PR_REF: ${{ github.event.client_payload.pull_request.head.sha }}
+  failure:
+    if: failure()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Update State
+        run: >-
+          docker run -i
+          -e GITHUB_ACTION=update_state
+          -e GITHUB_TOKEN=$GITHUB_TOKEN
+          -e GITHUB_OWNER=$PR_OWNER
+          -e GITHUB_REPO=$PR_REPO
+          -e GITHUB_REF=$PR_REF
+          -e GITHUB_STATE=failure
+          -e GITHUB_CONTEXT="Preview"
+          -e GITHUB_DESCRIPTION="Commit status with target URL"
+          -e GITHUB_TARGET_URL="https://github.com/${GITHUB_REPOSITORY}/actions/${GITHUB_ACTION}"
+          cloudposse/github-status-updater
+        env:
+          GITHUB_TOKEN: ${{ secrets.ACTIONS_BOT_TOKEN }}
+          PR_REPO: ${{ github.event.client_payload.github.payload.repository.name }}
+          PR_OWNER: ${{ github.event.client_payload.github.payload.repository.owner.login }}
+          PR_REF: ${{ github.event.client_payload.pull_request.head.sha }}
