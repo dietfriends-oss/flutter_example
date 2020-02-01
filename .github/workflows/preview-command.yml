@@ -2,7 +2,7 @@ name: preview
 
 on:
   repository_dispatch:
-    types: [preview-command]
+    types: [preview-command,preview-ios-command]
 # https://github.com/peter-evans/slash-command-dispatch-processor/blob/master/.github/workflows/hello-world-pr-command.yml
 jobs:
   preview-ios:
