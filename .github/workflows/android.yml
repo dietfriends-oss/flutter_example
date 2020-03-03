@@ -35,7 +35,7 @@ jobs:
 
       - name: Build APK
         run: |
-          flutter apk
+          flutter build apk
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
         timeout-minutes: 20
